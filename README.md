@@ -5,8 +5,15 @@ A curated collection of architecture-first engineering notes covering distribute
 
 Written from a practical software architect’s perspective with emphasis on system design tradeoffs, operational realities, and production-scale thinking.
 
-# How do I Prepare these Notes?
+# How do I prepare these notes?
 1. Referring to official documents
 2. YouTube videos
 3. Google search
-4. ChatGPT (To structure it)
+4. 5W1H
+5. ChatGPT (To structure it)
+
+# How can you contribute?
+If you feel that any written notes need improvement, please feel free to make an update and raise a pull request :)
+
+# Table of Contents
+1. [Kafka 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-kafka.md)
