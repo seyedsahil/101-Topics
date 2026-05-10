@@ -5,6 +5,9 @@ A curated collection of architecture-first engineering notes covering distribute
 
 Written from a practical software architect’s perspective with emphasis on system design tradeoffs, operational realities, and production-scale thinking.
 
+# AIM
+To consolidate concepts in a structured way!!!
+
 # How do I prepare these notes?
 1. Referring to official documents
 2. YouTube videos
