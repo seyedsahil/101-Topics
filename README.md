@@ -1,4 +1,4 @@
-# 101 — Topics
+# 101-Topics
 Journal of an Architect
 
 A curated collection of architecture-first engineering notes covering distributed systems, event-driven architecture, scalability, reliability, cloud-native infrastructure, security, and modern backend engineering concepts.
@@ -19,6 +19,7 @@ To consolidate concepts in a structured way!!!
 If you feel that any written notes need improvement, please feel free to make an update and raise a pull request :)
 
 # Table of Contents
-1. [Kafka 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-kafka.md)
-2. [Backpressure 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-backpressure.md)
-3. [DynamoDB 101 — Indexes, Rebalancing, Consistency & Query Internals](https://github.com/seyedsahil/101-Topics/blob/main/101-dynamodb.md)
+1. [Backpressure 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-backpressure.md)
+2. [I/O Multiplexing 101 — Architectural Foundations](https://github.com/seyedsahil/101-Topics/blob/main/101-io-multiplexing.md)
+3. [Kafka 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-kafka.md)
+4. [DynamoDB 101 - Indexes, Rebalancing, Consistency & Query Internals](https://github.com/seyedsahil/101-Topics/blob/main/101-dynamodb.md)
