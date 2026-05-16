@@ -21,6 +21,7 @@ If you feel that any written notes need improvement, please feel free to make an
 # Table of Contents
 1. [Backpressure 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-backpressure.md)
 2. [I/O Multiplexing 101 — Architectural Foundations](https://github.com/seyedsahil/101-Topics/blob/main/101-io-multiplexing.md)
-3. [Kafka 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-kafka.md)
-4. [DynamoDB 101 — Indexes, Rebalancing, Consistency & Query Internals](https://github.com/seyedsahil/101-Topics/blob/main/101-dynamodb.md)
-5. [Redis 101 — Architectural Foundations](https://github.com/seyedsahil/101-Topics/blob/main/101-redis.md)
+3. [Zero-Copy 101 — System Engineer & Architect Guide](https://github.com/seyedsahil/101-Topics/blob/main/101-zero-copy.md)
+4. [Redis 101 — Architectural Foundations](https://github.com/seyedsahil/101-Topics/blob/main/101-redis.md)
+5. [Kafka 101 — An Architectural Overview](https://github.com/seyedsahil/101-Topics/blob/main/101-kafka.md)
+6. [DynamoDB 101 — Indexes, Rebalancing, Consistency & Query Internals](https://github.com/seyedsahil/101-Topics/blob/main/101-dynamodb.md)
