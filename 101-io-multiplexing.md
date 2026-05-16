@@ -1358,6 +1358,383 @@ Large systems become complicated.
 
 ---
 
+# 22. How Redis Safely Uses Edge Triggered (ET)
+
+A natural question:
+
+```text
+ET says:
+
+If application reads only partial data:
+
+ABCDE
+
+Remaining:
+
+FGHIJ
+
+No future event generated
+```
+
+So:
+
+```text
+How does Redis avoid connections getting stuck?
+```
+
+Redis does not "fix" ET afterward.
+
+Redis is designed around ET behavior from day one.
+
+Core principle:
+
+```text
+If ET gives one notification,
+
+drain everything immediately
+```
+
+---
+
+# Redis Event Loop Philosophy
+
+Redis does NOT do:
+
+```c
+read(socket)
+
+process()
+
+return
+```
+
+because:
+
+```text
+Partial read possible
+
+ABCDE read
+
+FGHIJ remains
+
+No future event
+```
+
+Connection can appear stuck.
+
+Instead Redis continuously reads until socket becomes empty.
+
+Pseudo-flow:
+
+```c
+while(true){
+
+    n=read(socket,buffer);
+
+    if(n>0){
+
+        process(buffer);
+
+    }
+
+    else if(errno==EAGAIN){
+
+        break;
+
+    }
+
+}
+```
+
+Meaning:
+
+```text
+Keep reading
+Keep reading
+Keep reading
+Until kernel says:
+
+No more data
+```
+
+---
+
+# Step-by-Step Example
+
+Initial buffer:
+
+```text
+EMPTY
+```
+
+Client sends:
+
+```text
+ABCDEFGHIJ
+```
+
+Kernel:
+
+```text
+EMPTY
+    ↓
+NONEMPTY
+```
+
+ET generates:
+
+```text
+socket ready
+```
+
+Redis begins reading.
+
+Read #1:
+
+```text
+ABCDE
+```
+
+Buffer:
+
+```text
+FGHIJ
+```
+
+Redis does NOT stop.
+
+Read #2:
+
+```text
+FGHIJ
+```
+
+Buffer:
+
+```text
+EMPTY
+```
+
+Read #3:
+
+```text
+EAGAIN
+```
+
+Kernel says:
+
+```text
+No more data available
+```
+
+Redis exits loop.
+
+---
+
+# Why EAGAIN Matters
+
+Redis uses:
+
+```text
+Non-blocking sockets
+```
+
+Configured as:
+
+```c
+fcntl(fd,F_SETFL,O_NONBLOCK)
+```
+
+Now:
+
+```c
+read()
+```
+
+never blocks.
+
+Cases:
+
+Data exists:
+
+```text
+return bytes
+```
+
+No data exists:
+
+```text
+return EAGAIN
+```
+
+Meaning:
+
+```text
+Socket fully drained
+```
+
+---
+
+# Why Blocking Sockets Would Fail
+
+Suppose Redis used:
+
+```text
+Blocking socket
+```
+
+and executes:
+
+```c
+read(socket)
+```
+
+after buffer becomes empty.
+
+Result:
+
+```text
+Wait forever
+```
+
+Since Redis uses:
+
+```text
+Single thread
+```
+
+Entire server becomes stuck.
+
+Thus:
+
+```text
+ET + Blocking Socket
+```
+
+is dangerous.
+
+Redis instead uses:
+
+```text
+ET
++
+Non-blocking sockets
++
+Read until EAGAIN
+```
+
+---
+
+# Why Redis Can Reliably Use ET
+
+Redis architecture:
+
+```text
+Single Thread
+      ↓
+Event Loop
+      ↓
+Read
+      ↓
+Execute command
+      ↓
+Write
+```
+
+Very predictable flow.
+
+Redis avoids:
+
+```text
+Servlet chains
+Filters
+Authentication pipelines
+Complex thread dispatch
+```
+
+Code remains controlled.
+
+Engineers can guarantee:
+
+```text
+Always drain socket
+```
+
+---
+
+# Compare Redis vs Tomcat
+
+Redis:
+
+```text
+socket ready
+     ↓
+read until EAGAIN
+     ↓
+execute
+     ↓
+write
+```
+
+Tomcat:
+
+```text
+socket ready
+      ↓
+read request
+      ↓
+filters
+      ↓
+authentication
+      ↓
+servlets
+      ↓
+thread pool
+      ↓
+business logic
+```
+
+Tomcat has more layers.
+
+Stopping midway is common.
+
+Thus Tomcat often prefers:
+
+```text
+LT
+```
+
+Kernel reminders protect application logic.
+
+---
+
+# Architect Takeaway
+
+Redis does not solve ET bugs using retries.
+
+Redis solves ET by designing around ET assumptions:
+
+```text
+Non-blocking sockets
+        +
+Read until EAGAIN
+        +
+Single-thread event loop
+        +
+Strict coding discipline
+```
+
+Result:
+
+```text
+Fewer wakeups
+Less kernel overhead
+High scalability
+No stuck sockets
+```
+
+---
+
 # Rule of Thumb
 
 Use I/O Multiplexing when:
