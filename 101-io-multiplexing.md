@@ -963,6 +963,462 @@ write()
 
 ---
 
+# 21. Pros and Cons of I/O Multiplexing
+
+I/O Multiplexing is not universally better.
+
+It optimizes specific bottlenecks.
+
+Understanding tradeoffs is important.
+
+---
+
+# Advantages
+
+## 1. Handles Massive Connection Counts
+
+Traditional model:
+
+```text
+1 Thread ↔ 1 Connection
+```
+
+Example:
+
+```text
+10000 connections
+
+10000 threads
+```
+
+I/O Multiplexing:
+
+```text
+few threads
+many sockets
+```
+
+Examples:
+
+```text
+Nginx
+Redis
+Netty
+Node.js
+```
+
+can support:
+
+```text
+100K+
+1M+
+```
+
+mostly idle connections.
+
+---
+
+## 2. Reduces Thread Memory Usage
+
+Thread-per-connection:
+
+```text
+Thread stack
+Kernel scheduler structures
+```
+
+Example:
+
+```text
+10000 threads × 1MB stack
+
+≈10GB
+```
+
+With multiplexing:
+
+```text
+4 worker threads
+10000 sockets
+```
+
+Huge memory savings.
+
+---
+
+## 3. Reduces Context Switching
+
+Large thread pools create:
+
+```text
+sleep
+wake
+sleep
+wake
+```
+
+CPU repeatedly performs:
+
+```text
+save registers
+restore registers
+cache invalidation
+scheduler work
+```
+
+Multiplexing:
+
+```text
+few threads
+many connections
+```
+
+Less scheduler overhead.
+
+Often this becomes the hidden performance win.
+
+---
+
+## 4. Avoids Wasted Work
+
+Example:
+
+```text
+10000 connections
+
+9980 idle
+20 active
+```
+
+select():
+
+```text
+scan 10000
+```
+
+epoll():
+
+```text
+process only 20
+```
+
+Less unnecessary CPU work.
+
+---
+
+## 5. Better CPU Utilization
+
+Traditional model:
+
+```text
+Thread waiting
+Thread waiting
+Thread waiting
+```
+
+Multiplexing:
+
+```text
+Thread works only when data exists
+```
+
+CPU spends more time:
+
+```text
+doing work
+```
+
+rather than:
+
+```text
+waiting
+```
+
+---
+
+## 6. Better For Network-heavy Systems
+
+Very useful for:
+
+- web servers
+- proxies
+- API gateways
+- chat systems
+- websocket systems
+- streaming systems
+
+Examples:
+
+```text
+Nginx
+HAProxy
+Redis
+Kafka networking layer
+```
+
+---
+
+# Disadvantages
+
+## 1. Application Logic Becomes More Complex
+
+Thread-per-connection:
+
+```java
+read()
+process()
+write()
+```
+
+Simple mental model.
+
+Multiplexing:
+
+```c
+event arrives
+
+which socket?
+
+what state?
+
+partial read?
+
+partial write?
+```
+
+Application must maintain connection state.
+
+Complexity increases significantly.
+
+---
+
+## 2. Harder Debugging
+
+Traditional:
+
+```text
+one request
+one thread
+```
+
+Easy tracing.
+
+Multiplexing:
+
+```text
+one thread
+many requests
+many sockets
+```
+
+Tracing behavior becomes harder.
+
+---
+
+## 3. ET Mode Can Be Dangerous
+
+Example:
+
+Client sends:
+
+```text
+ABCDEFGHIJ
+```
+
+Application reads:
+
+```text
+ABCDE
+```
+
+Remaining:
+
+```text
+FGHIJ
+```
+
+ET:
+
+```text
+No further event
+```
+
+Bug:
+
+```text
+connection appears stuck
+```
+
+Developers must:
+
+```c
+while(read()!=EAGAIN)
+```
+
+until empty.
+
+---
+
+## 4. Long Processing Can Block Event Loop
+
+Suppose:
+
+```text
+socket1
+socket2
+socket3
+```
+
+socket1:
+
+```text
+heavy computation
+```
+
+takes:
+
+```text
+5 seconds
+```
+
+Event loop blocked:
+
+```text
+socket2 waits
+socket3 waits
+```
+
+Multiplexing works best when:
+
+```text
+I/O work small
+CPU work delegated elsewhere
+```
+
+Modern systems often use:
+
+```text
+event loop
+     ↓
+worker pool
+```
+
+---
+
+## 5. Not Ideal For CPU-bound Workloads
+
+Multiplexing solves:
+
+```text
+waiting for I/O
+```
+
+It does NOT solve:
+
+```text
+heavy computation
+image processing
+ML inference
+large analytics
+```
+
+CPU-heavy workloads usually require:
+
+```text
+multiple worker threads
+multiple processes
+parallel execution
+```
+
+---
+
+## 6. State Management Becomes Difficult
+
+Thread model:
+
+```text
+thread owns request
+```
+
+Simple.
+
+Multiplexing:
+
+Application often tracks:
+
+```text
+connection state
+partial request
+buffers
+timeouts
+protocol state
+```
+
+Large systems become complicated.
+
+---
+
+# Rule of Thumb
+
+Use I/O Multiplexing when:
+
+```text
+Many connections
+Low activity per connection
+Mostly waiting on network
+```
+
+Examples:
+
+- Redis
+- Nginx
+- WebSocket servers
+- API gateways
+
+---
+
+Avoid relying only on multiplexing when:
+
+```text
+Heavy CPU processing
+Long-running tasks
+Complex computation
+```
+
+Combine with:
+
+```text
+event loop
+      ↓
+thread pool
+```
+
+---
+
+# Architect Takeaway
+
+I/O Multiplexing trades:
+
+```text
+Higher implementation complexity
+```
+
+for:
+
+```text
+Massive scalability
+Reduced context switching
+Lower memory usage
+Better idle connection handling
+```
+
+The core optimization:
+
+```text
+Stop spending resources
+on connections doing nothing.
+```
+
 # Final Takeaway
 
 epoll solves:
